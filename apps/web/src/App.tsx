@@ -40,7 +40,7 @@ export default function App() {
       }
 
       if (event.type === "NEW_CONVERSATION") {
-        setConversations((prev) => [...prev, event.payload]);
+        setConversations((prev) => [event.payload, ...prev]);
       }
     };
 

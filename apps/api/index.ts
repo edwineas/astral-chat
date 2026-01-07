@@ -2,7 +2,7 @@ import { Elysia } from "elysia";
 import { cors } from "@elysiajs/cors";
 import { db } from "./db/client";
 import { conversations, messages } from "@astral/db";
-import { eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 
 const app = new Elysia()
   .use(
@@ -38,7 +38,7 @@ app.post("/conversations", async ({ server }) => {
 });
 
 app.get("/conversations", async () => {
-  const rows = await db.select().from(conversations);
+  const rows = await db.select().from(conversations).orderBy(desc(conversations.createdAt));
 
   return rows.map((row) => ({
     id: row.id,
