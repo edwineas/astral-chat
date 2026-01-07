@@ -1,7 +1,8 @@
 import { Elysia } from "elysia";
 import { cors } from "@elysiajs/cors";
 import { db } from "./db/client";
-import { Conversation, conversations, Message, messages } from "@astral/db";
+import { conversations, messages } from "@astral/db";
+import type { Conversation, Message } from "@astral/db";
 import { desc, eq } from "drizzle-orm";
 
 const app = new Elysia()
