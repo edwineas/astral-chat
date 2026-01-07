@@ -65,16 +65,6 @@ export default function App() {
         },
       })
     );
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: Date.now().toString(),
-        conversationId,
-        sender: "client",
-        content: input,
-        createdAt: new Date(),
-      },
-    ]);
     setInput("");
   };
 

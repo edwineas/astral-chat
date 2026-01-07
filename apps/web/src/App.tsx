@@ -60,16 +60,6 @@ export default function App() {
         },
       })
     );
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: Date.now().toString(),
-        conversationId: selectedId,
-        sender: "agent",
-        content: input,
-        createdAt: new Date(),
-      },
-    ]);
 
     setInput("");
   };

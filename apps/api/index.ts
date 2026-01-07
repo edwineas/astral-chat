@@ -101,7 +101,7 @@ app.ws("/ws", {
         type: "NEW_MESSAGE",
         payload: row,
       });
-
+      ws.send(messageEvent);
       ws.publish("chat", messageEvent);
     }
   },
