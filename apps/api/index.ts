@@ -1,7 +1,7 @@
 import { Elysia } from "elysia";
 import { cors } from "@elysiajs/cors";
 import { db } from "./db/client";
-import { conversations, messages } from "@astral/db";
+import { Conversation, conversations, Message, messages } from "@astral/db";
 import { desc, eq } from "drizzle-orm";
 
 const app = new Elysia()
@@ -16,7 +16,13 @@ app.get("/", () => {
 });
 
 app.post("/conversations", async ({ server }) => {
-  const result = await db.insert(conversations).values({}).returning();
+  let result: Conversation[];
+  try {
+    result = await db.insert(conversations).values({}).returning();
+  } catch (err) {
+    console.error("Failed to create conversation:", err);
+    return { error: "Failed to create conversation" };
+  }
   const row = result[0];
 
   const conversation = {
@@ -38,27 +44,31 @@ app.post("/conversations", async ({ server }) => {
 });
 
 app.get("/conversations", async () => {
-  const rows = await db.select().from(conversations).orderBy(desc(conversations.createdAt));
+  let result: Conversation[];
 
-  return rows.map((row) => ({
-    id: row.id,
-    createdAt: row.createdAt,
-  }));
+  try {
+    result = await db.select().from(conversations).orderBy(desc(conversations.createdAt));
+  } catch (err) {
+    console.error("Failed to retrieve conversations:", err);
+    return { error: "Failed to retrieve conversations" };
+  }
+
+  return result;
+
 });
 
 app.get("/conversations/:id/messages", async ({ params }) => {
-  const rows = await db
-    .select()
-    .from(messages)
-    .where(eq(messages.conversationId, params.id));
 
-  return rows.map((row) => ({
-    id: row.id,
-    conversationId: row.conversationId,
-    sender: row.sender,
-    content: row.content,
-    createdAt: row.createdAt,
-  }));
+  let result: Message[];
+
+  try {
+    result = await db.select().from(messages).where(eq(messages.conversationId, params.id));
+  } catch (err) {
+    console.error("Failed to retrieve messages:", err);
+    return { error: "Failed to retrieve messages" };
+  }
+
+  return result;
 });
 
 app.ws("/ws", {
@@ -69,28 +79,26 @@ app.ws("/ws", {
     if (data.type === "SEND_MESSAGE") {
       const { conversationId, sender, content } = data.payload;
 
-      const result = await db
-        .insert(messages)
-        .values({
-          conversationId,
-          sender,
-          content,
-        })
-        .returning();
+      let result: Message[];
+      try {
+        result = await db
+          .insert(messages)
+          .values({
+            conversationId,
+            sender,
+            content,
+          })
+          .returning();
+      } catch (err) {
+        console.error("Failed to send message:", err);
+        return { error: "Failed to send message" };
+      }
 
       const row = result[0];
 
-      const message = {
-        id: row.id,
-        conversationId: row.conversationId,
-        sender: row.sender,
-        content: row.content,
-        createdAt: row.createdAt,
-      };
-
       const messageEvent = JSON.stringify({
         type: "NEW_MESSAGE",
-        payload: message,
+        payload: row,
       });
 
       ws.publish("chat", messageEvent);
